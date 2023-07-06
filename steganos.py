@@ -6,7 +6,6 @@ import json
 
 keys = {'c': '10000000', 'i': '01000000', 'a': '00100000', 'o': '00010000'}
 
-
 # Crea una chiave randomica per criptare il messaggio servendosi dei caratteri del messaggio stesso
 def generate_dictionary(data):
     global keys
@@ -94,33 +93,33 @@ def encode_enc(newimg, data):
 
 
 # Cripto il messaggio
-def encode():
-    img = input("Inserisci il nome dell'immagine (con l'estensione) : ")
-    image = Image.open(img, 'r')
+def encode(image_path, text_to_encode, keys_to_use):
+    image = Image.open(image_path, 'r')
 
-    data = input("Inserisci messaggio da codificare: ")
-    if (len(data) == 0):
+    data = text_to_encode
+    if len(data) == 0:
         raise ValueError('Il messaggio è vuoto')
 
-    isKey = int(input("Scegli la chiave: \n"
-                      "1. Sistema\n2. Genera casualmente\n"))
-    if isKey not in [1, 2]:
-        raise ValueError("Puoi scegliere solo 1 o 2!")
-
-    if (isKey == 2):
+    if keys_to_use == 2:
         generate_dictionary(data)
 
     newimg = image.copy()
     encode_enc(newimg, data)
 
-    new_img_name = input("Inserisci il nome dell'immagine (con l'estensione) : ")
-    newimg.save(new_img_name, str(new_img_name.split(".")[1].upper()))
+    new_img_name = str(image_path).split("/")[-1].split(".")[0]
+    new_img_name = new_img_name + "Encoded.png"
+    newimg.save(new_img_name)
 
 
 # Decodifico il messaggio
-def decode():
-    img = input("Inserisci il nome dell'immagine (con l'estensione) : ")
-    image = Image.open(img, 'r')
+def decode(image_path, keys_path=None):
+    keys_to_decode = {}
+    if keys_path is not None:
+        with open(keys_path, "r") as file:
+            keys_to_decode = json.load(file)
+
+    keys_to_decode = {v: k for k, v in keys_to_decode.items()}
+    image = Image.open(image_path, 'r')
 
     data = ''
     imgdata = iter(image.getdata())
@@ -139,36 +138,8 @@ def decode():
             else:
                 binstr += '1'
 
-        data += keys[binstr]
+        if binstr not in keys_to_decode.keys():
+            raise ValueError("Chiave non presente nel dizionario")
+        data += keys_to_decode[binstr]
         if (pixels[-1] % 2 != 0):
             return data
-
-
-# Main Function
-def main():
-    global keys
-    a = int(input(":: Benvenuto in Steganos ::\n"
-                  "1. Codifica\n2. Decodifica\n"))
-    if a == 1:
-        encode()
-
-    elif a == 2:
-        isSystem = int(input("Scegli la chiave:\n"
-                             "1. Sistema\n2. File\n"))
-
-        if isSystem not in [1, 2]:
-            raise ValueError("Puoi scegliere solo 1 o 2!")
-
-        if isSystem == 2:
-            jsonFile = input("Inserisci il nome del file json: ")
-            with open(jsonFile, "r") as file:
-                keys = json.load(file)
-
-        keys = {v: k for k, v in keys.items()}
-        print("Frase decodificata : " + decode())
-    else:
-        raise Exception("Inserisci un input valido!")
-
-
-if __name__ == '__main__':
-    main()

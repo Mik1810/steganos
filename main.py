@@ -1,7 +1,10 @@
 from PyQt6 import QtCore, QtWidgets
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QFileDialog, QLineEdit, QRadioButton, QButtonGroup, QHBoxLayout
-from PyQt6.QtGui import QPixmap, QDragEnterEvent, QDropEvent, QMouseEvent
+from PyQt6.QtGui import QPixmap, QDragEnterEvent, QDropEvent
+import steganos as st
 
+file_path = ""
+keys_path = ""
 
 class ImageView(QLabel):
     def __init__(self, parent):
@@ -16,6 +19,7 @@ class ImageView(QLabel):
             event.acceptProposedAction()
 
     def dropEvent(self, event: QDropEvent):
+        global file_path
         files = event.mimeData().urls()
         if len(files) > 0:
             file_path = files[0].toLocalFile()
@@ -97,6 +101,12 @@ class MainWindow(QMainWindow):
         self.process_button.setText("Processa")
         self.process_button.clicked.connect(self.process_action)
 
+        self.result = QtWidgets.QLabel(self)
+        self.result.setGeometry(QtCore.QRect(10, 290, 580, 70))
+        self.result.setText("Testo decriptato: ")
+        self.result.setVisible(False)
+        self.result.setWordWrap(True)
+
     def radio_clicked(self, button):
         if button == self.radio1:
             self.jsonButton.setVisible(False)
@@ -119,6 +129,7 @@ class MainWindow(QMainWindow):
             self.hbox.setGeometry(QtCore.QRect(45, 105, 220, 30))
             self.radio2.setText("Importa da file")
             self.radio1.setChecked(True)
+            self.result.setVisible(True)
         elif selected_option == "Encode":
             self.jsonField.setVisible(False)
             self.jsonButton.setVisible(False)
@@ -133,27 +144,37 @@ class MainWindow(QMainWindow):
             raise ValueError("Operazione non permessa")
 
     def select_file(self):
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleziona file")
+        global file_path
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "Seleziona file")
         if file_path:
             self.image_label.setPixmap(QPixmap(file_path))
             self.text_label.setText(file_path)
 
     def select_dictionary(self):
-        print("prova")
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleziona file")
-        if file_path:
-            self.jsonField.setText(file_path)
+        global keys_path
+        keys_path, _ = QFileDialog.getOpenFileName(self, "Seleziona file", "", "File JSON (*.json)")
+        if keys_path:
+            self.jsonField.setText(keys_path)
 
     def process_action(self):
-        print("Ciaoo")
+        global file_path
         selected_option = self.option_combo.currentText()
         if selected_option == "Encode":
             # Logica per l'encoding dell'immagine
-            pass
+            if self.radio1.isChecked():
+                st.encode(file_path, self.file_textfield.text(), 1)
+            else:
+                st.encode(file_path, self.file_textfield.text(), 2)
         elif selected_option == "Decode":
-            # Logica per il decoding dell'immagine
-            pass
 
+            if self.radio1.isChecked():
+                try:
+                    self.result.setText("Testo decodificato: "+st.decode(file_path))
+                except ValueError as e:
+                    self.result.setText("Errore: "+e.args[0])
+            else:
+                self.result.setText("Testo decodificato: "+st.decode(file_path, keys_path))
 
 if __name__ == "__main__":
     import sys
