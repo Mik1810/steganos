@@ -4,3 +4,7 @@
 *.jpg
 *.jpeg
 *.pyc
+build
+dist/main
+main.spec
+nome_file.spec

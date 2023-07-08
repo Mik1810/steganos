@@ -5,12 +5,13 @@ import steganos as st
 
 file_path = ""
 keys_path = ""
+placeholder_image = "placeholder.jpg"
 
 class ImageView(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAcceptDrops(True)
-        self.setPixmap(QPixmap("placeholder.jpg"))
+        self.setPixmap(QPixmap(placeholder_image))
         self.setScaledContents(True)
         self.setFixedSize(200,200)
 
